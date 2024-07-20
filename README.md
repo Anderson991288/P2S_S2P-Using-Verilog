@@ -8,7 +8,7 @@
    ![image](https://github.com/user-attachments/assets/181333cf-1d8b-4634-867f-32dc3f631142)
 
 
-3. Code
+2. Code
 
    This design outputs each bit of the 32-bit parallel data sequentially according to the enable signal in every clock cycle. When the counter reaches 32, it restarts.
    
@@ -118,6 +118,101 @@ endmodule
 
 
 ![IMG_1590](https://github.com/user-attachments/assets/32955c7c-c0cc-4085-bfa8-2ac55e5dbdf4)
+
+
+## Serial to Parallel RTL Code 
+1.Open Vivado project
+
+![image](https://github.com/user-attachments/assets/7295d070-73f7-48ec-8f99-a8d41f18dffe)
+
+
+2. SIPO Shift Register
+
+   A Serial-In Parallel-Out (SIPO) shift register is a common implementation of serial to parallel conversion.
+
+   This shift register takes serial input and converts it into a 32-bit parallel output.
+
+```
+module s2p(clk, in, rst, pout);
+  input clk, rst;
+  input in;
+  output reg [31:0] pout;
+ 
+  always @ (posedge clk, posedge rst)
+    begin
+      if (rst)
+        pout <= 0;
+      else 
+        pout <= {in, pout[31:1]};
+    end 
+endmodule
+```
+
+3.Testbench
+
+```
+module s2p_tb;
+
+  // Testbench signals
+  reg clk;
+  reg rst;
+  reg in;
+  wire [31:0] pout;
+
+  // Instantiate the SIPO module
+  s2p uut (
+    .clk(clk),
+    .rst(rst),
+    .in(in),
+    .pout(pout)
+  );
+
+  // Clock generation
+  always begin
+    #5 clk = ~clk; // Toggle clock every 5 time units
+  end
+
+  // Test sepoutuence
+  initial begin
+    // Initialize signals
+    clk = 0;
+    rst = 0;
+    in = 0;
+
+    // Apply reset
+    #10 rst = 1;
+    #10 rst = 0;
+
+    // Shift in 32 bits of data
+    repeat (32) begin
+      #10 in = $random % 2; // Generate random 0 or 1 for input
+    end
+
+    // Finish the simulation
+    #100;
+    $finish;
+  end
+
+  // Monitor the signals
+  initial begin
+    $monitor("Time: %0t | rst = %b | in = %b | pout = %b", $time, rst, in, pout);
+  end
+
+endmodule
+```
+
+4.Simulation result
+
+![螢幕擷取畫面 2024-07-20 132527](https://github.com/user-attachments/assets/e84b62fd-73f6-47c7-a04e-28ea8ea10cc2)
+
+
+
+
+
+
+
+
+
 
 
 
